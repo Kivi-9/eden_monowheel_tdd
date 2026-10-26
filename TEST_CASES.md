@@ -2,7 +2,7 @@
 
 **Источник:** `SPEC.md`, версия 1.0.
 
-ID `TC-001`–`TC-054` закреплены за модульными тестами § 4.1; `TC-055`–`TC-057` — за сценариями § 4.2. При ссылке на тест из отчёта или другого артефакта используется именно этот ID.
+ID `TC-001`–`TC-054` и `TC-058`–`TC-063` закреплены за модульными тестами § 4.1; `TC-055`–`TC-057` — за сценариями § 4.2. При ссылке на тест из отчёта или другого артефакта используется именно этот ID.
 
 **Базовая конфигурация**, если в предусловии не сказано иначе: `EdenMonowheel("Эдем", 4, 300, 100)`; гондола закрыта, помощник и оборудование выключены, позиция и пробег равны нулю. Подготовка специальных состояний выполняется до шага «Вход».
 
@@ -64,6 +64,12 @@ ID `TC-001`–`TC-054` закреплены за модульными теста
 | TC-052 | SPEC § 3.4.11; `test_set_helper_inactive` | моноколесо с включённым помощником. | `set_helper_active(False)`. | `helper_active == False`; энергия не изменяется. | medium |
 | TC-053 | SPEC § 3.4.9; `test_set_equipment_inactive` | моноколесо с подключённой включённой уборочной машиной. | `set_equipment_active(False)`. | `equipment_active == False`, `equipment_attached == True`. | medium |
 | TC-054 | SPEC § 3.4.1, 3.4.10; `test_equipment_partial_ton` | моноколесо с энергией 50, включённой уборочной машиной и рвом с остатком 0.5 тонны. | `move(20, 0.05, "ground")`. | `trench_remaining_t == 0`, `trench_filled == True`, `energy == 40.5` (2 единицы за 1 км и 7.5 за 0.5 тонны). | medium |
+| TC-058 | SPEC § 6.3; `test_invalid_speed_has_priority_over_no_energy` | энергия 10, помощник выключен. | `move(60, 0.5, "ground")`. | `ValueError` имеет приоритет над `MonowheelNoEnergy`; состояние не изменяется. | high |
+| TC-059 | SPEC § 3.4.1, §6.2; `test_equipment_no_energy_raises` | энергия 16, подключённая и включённая уборочная машина, ров 1 т. | `move(20, 0.05, "ground")`. | `MonowheelNoEnergy`; энергия, пробег и состояние рва не изменяются. | high |
+| TC-060 | SPEC § 3.4.2; `test_calculate_energy_invalid_parameters_raise` | созданное моноколесо, помощник выключен. | `calculate_energy(50, 0.1, "ground")` и `calculate_energy(20, 0.1, "water")`. | Для каждого входа поднимается `ValueError`; состояние не изменяется. | high |
+| TC-061 | SPEC § 3.2, §3.4.1, §3.4.3; `test_non_finite_numbers_raise` | созданное моноколесо. | `move(float("nan"), 0.1, "ground")`, `move(20, float("inf"), "ground")`, `can_overcome(float("inf"))`. | Для каждого входа поднимается `ValueError`; состояние не изменяется. | high |
+| TC-062 | SPEC § 3.4.1; `test_equipment_works_on_sand` | энергия 100, подключённая и включённая уборочная машина, ров 1 т. | `move(20, 0.05, "sand")`. | Ров засыпан; `mileage_km == 1`; `energy == 81`. | medium |
+| TC-063 | SPEC § 3.4.11, §6.2; `test_helper_ground_speed_limit_raises` | помощник включён. | `move(60, 0.1, "ground")`. | Поднимается `ValueError`; состояние не изменяется. | high |
 
 ## Сценарные тесты
 

@@ -232,7 +232,7 @@ class EdenMonowheelUnitTests(unittest.TestCase):
         # Arrange
         wheel = self.make_wheel(); before = self.snapshot(wheel)
         # Act / Assert
-        self.assertFalse(wheel.can_overcome(20.5))
+        self.assertFalse(wheel.can_overcome(2.5))
         self.assert_state(wheel, before)
 
     def test_TC_028_can_overcome_negative_width_raises(self):
@@ -471,4 +471,72 @@ class EdenMonowheelUnitTests(unittest.TestCase):
         # Act
         wheel.move(20, .05, "ground")
         # Assert
-        self.assertEqual((wheel.trench_remaining_t, wheel.trench_filled, wheel.energy), (0, True, 400.5))
+        self.assertEqual((wheel.trench_remaining_t, wheel.trench_filled, wheel.energy), (0, True, 40.5))
+
+    def test_TC_058_invalid_speed_has_priority_over_no_energy(self):
+        # Arrange
+        wheel = self.make_wheel(10)
+        before = self.snapshot(wheel)
+
+        # Act / Assert
+        with self.assertRaises(ValueError): 
+            wheel.move(60, .5, "ground")
+        self.assert_state(wheel, before)
+
+    def test_TC_059_equipment_no_energy_raises(self):
+        # Arrange
+        wheel = self._equipped_wheel(16, 1)
+        before = self.snapshot(wheel)
+        # Act / Assert
+        with self.assertRaises(MonowheelNoEnergy):
+            wheel.move(20, .05, "ground")
+        self.assert_state(wheel, before)
+
+    def test_TC_060_calculate_energy_invalid_parameters_raise(self):
+        # Arrange
+        wheel = self.make_wheel()
+        before = self.snapshot(wheel)
+        # Act / Assert
+        for speed, time, terrain in ((50, .1, "ground"), (20, .1, "water")):
+            with self.subTest(speed=speed, terrain=terrain):
+                with self.assertRaises(ValueError): 
+                    wheel.calculate_energy(speed, time, terrain)
+                self.assert_state(wheel, before)
+
+    def test_TC_061_non_finite_numbers_raise(self):
+        # Arrange
+        wheel = self.make_wheel()
+        before = self.snapshot(wheel)
+
+        # Act / Assert: NaN в скорости
+        with self.assertRaises(ValueError):
+            wheel.move(float("nan"), 0.1, "ground")
+        self.assert_state(wheel, before)
+
+        # Act / Assert: бесконечное время
+        with self.assertRaises(ValueError):
+            wheel.move(20, float("inf"), "ground")
+        self.assert_state(wheel, before)
+
+        # Act / Assert: бесконечная ширина препятствия
+        with self.assertRaises(ValueError):
+            wheel.can_overcome(float("inf"))
+        self.assert_state(wheel, before)
+
+    def test_TC_062_equipment_works_on_sand(self):
+        # Arrange
+        wheel = self._equipped_wheel(100, 1)
+        # Act
+        wheel.move(20, .05, "sand")
+        # Assert
+        self.assertEqual((wheel.trench_remaining_t, wheel.trench_filled, wheel.mileage_km, wheel.energy), (0, True, 1, 81))
+
+    def test_TC_063_helper_ground_speed_limit_raises(self):
+        # Arrange
+        wheel = self.make_wheel()
+        wheel.set_helper_active(True)
+        before = self.snapshot(wheel)
+        # Act / Assert
+        with self.assertRaises(ValueError): 
+            wheel.move(60, .1, "ground")
+        self.assert_state(wheel, before)
